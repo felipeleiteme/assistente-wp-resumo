@@ -1,0 +1,23 @@
+{
+  "name": "reporter-clandestino",
+  "version": "1.0.0",
+  "description": "Sistema passivo de resumo de mensagens WhatsApp",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["whatsapp", "summarizer", "serverless"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.6",
+    "resend": "^3.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.1"
+  }
+}
