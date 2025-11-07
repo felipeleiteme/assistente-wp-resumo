@@ -1,4 +1,4 @@
-import { getDailyMessages, getDistinctGroupIdsToday, saveSummary } from '../services/supabase.service';
+import { getDailyMessages, getDistinctGroupIdsToday, saveSummary, cleanupOldMessages } from '../services/supabase.service';
 import { getSummary } from '../services/qwen.service';
 import { sendSummaryLink } from '../services/zapi.service';
 
@@ -62,6 +62,15 @@ export async function handleSummary(): Promise<void> {
   }
 
   console.log('Processo de resumo multi-grupo finalizado.');
+
+  // Limpeza de mensagens antigas (> 7 dias)
+  console.log('Iniciando limpeza de mensagens antigas (> 7 dias)...');
+  try {
+    await cleanupOldMessages();
+    console.log('Limpeza de mensagens concluída.');
+  } catch (error) {
+    console.error('Falha ao limpar mensagens antigas:', error);
+  }
 }
 
 async function sendToTeams(fullSummary: string, url: string, groupId: string): Promise<void> {

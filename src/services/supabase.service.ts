@@ -121,3 +121,21 @@ export async function saveSummary(summary: {
 
   return { id: data.id };
 }
+
+export async function cleanupOldMessages(): Promise<void> {
+  const client = getSupabaseClient();
+
+  // Definir cutoff de 7 dias atrás
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error, count } = await client
+    .from('messages')
+    .delete({ count: 'exact' })
+    .lte('created_at', cutoff);
+
+  if (error) {
+    throw new Error(`Erro ao limpar mensagens antigas: ${error.message}`);
+  }
+
+  console.log(`${count || 0} mensagens antigas removidas (> 7 dias).`);
+}
