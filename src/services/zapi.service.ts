@@ -1,7 +1,6 @@
-export async function sendSummaryLink(shortMessage: string, summaryUrl: string): Promise<void> {
+export async function sendSummaryLink(shortMessage: string, summaryUrl: string, groupId: string): Promise<void> {
   const instanceId = process.env.ZAPI_INSTANCE_ID;
   const token = process.env.ZAPI_TOKEN;
-  const groupId = process.env.ZAPI_GROUP_ID;
 
   if (!instanceId || !token || !groupId) {
     console.warn('Z-API não está completamente configurado. Mensagem não enviada.');
@@ -27,5 +26,5 @@ export async function sendSummaryLink(shortMessage: string, summaryUrl: string):
     throw new Error(`Erro ao enviar mensagem via Z-API: ${response.statusText}`);
   }
 
-  console.log('Mensagem enviada ao grupo via Z-API.');
+  console.log(`Mensagem enviada ao grupo ${groupId} via Z-API.`);
 }

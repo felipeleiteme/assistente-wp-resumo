@@ -1,6 +1,8 @@
-# Repórter Clandestino (V1)
+# Repórter Clandestino (V1.5)
 
 Sistema passivo de resumo de mensagens WhatsApp usando Vercel Functions, Supabase e Qwen.
+
+**V1.5:** Suporte a múltiplos grupos do WhatsApp.
 
 ## Stack
 
@@ -63,6 +65,7 @@ CREATE TABLE daily_summaries (
   summary_content TEXT NOT NULL,
   summary_date DATE NOT NULL,
   message_count INTEGER NOT NULL,
+  group_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
@@ -77,19 +80,23 @@ vercel --prod
 https://seu-dominio.vercel.app/api/webhooks/receiver
 ```
 
-## Fluxo V1
+## Fluxo V1.5
 
 1. **Ingestão:** Z-API envia webhook → `/api/webhooks/receiver` → salva em `messages`
 2. **Resumo (Cron 20:00 UTC):**
    - Aguarda atraso aleatório (1-10 min) para camuflagem
-   - Busca mensagens do dia
-   - Gera resumo com Qwen
-   - Salva em `daily_summaries`
-   - Envia resumo completo para Teams + Resend
-   - Envia mensagem curta + link para WhatsApp
+   - Busca todos os `group_id` distintos que enviaram mensagens hoje
+   - **Para cada grupo:**
+     - Busca mensagens do dia (filtradas por grupo)
+     - Gera resumo com Qwen
+     - Salva em `daily_summaries` (com `group_id`)
+     - Envia resumo completo para Teams + Resend (identificando o grupo)
+     - Envia mensagem curta + link para o grupo específico via WhatsApp
 
-## Notas V1
+## Notas V1.5
 
 - **100% passivo:** sem RAG, sem `@bot`, sem interatividade
+- **Multi-grupo:** processa múltiplos grupos em um único cron job
+- **Isolamento:** falha em um grupo não afeta outros grupos
 - **Camuflagem:** atraso aleatório antes de enviar resumo
 - **Segurança:** link público para resumo (sem resumo completo no WhatsApp)

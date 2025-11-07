@@ -41,7 +41,7 @@ export async function saveMessage(message: {
   }
 }
 
-export async function getDailyMessages(): Promise<Array<{
+export async function getDailyMessages(groupId: string): Promise<Array<{
   from: string;
   text: string;
   timestamp: string;
@@ -56,6 +56,7 @@ export async function getDailyMessages(): Promise<Array<{
     .from('messages')
     .select('from_number, text_content, received_at')
     .gte('received_at', todayIso)
+    .eq('group_id', groupId)
     .order('received_at', { ascending: true });
 
   if (error) {
@@ -69,11 +70,37 @@ export async function getDailyMessages(): Promise<Array<{
   }));
 }
 
+export async function getDistinctGroupIdsToday(): Promise<string[]> {
+  const client = getSupabaseClient();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayIso = today.toISOString();
+
+  const { data, error } = await client
+    .from('messages')
+    .select('group_id')
+    .gte('received_at', todayIso);
+
+  if (error) {
+    throw new Error(`Erro ao buscar grupos: ${error.message}`);
+  }
+
+  const uniqueGroupIds = new Set<string>();
+  (data || []).forEach(row => {
+    if (row.group_id) {
+      uniqueGroupIds.add(row.group_id);
+    }
+  });
+
+  return Array.from(uniqueGroupIds);
+}
+
 export async function saveSummary(summary: {
   content: string;
   date: string;
   message_count: number;
-}): Promise<{ id: string }> {
+}, groupId: string): Promise<{ id: string }> {
   const client = getSupabaseClient();
 
   const { data, error } = await client
@@ -82,6 +109,7 @@ export async function saveSummary(summary: {
       summary_content: summary.content,
       summary_date: summary.date,
       message_count: summary.message_count,
+      group_id: groupId,
       created_at: new Date().toISOString(),
     })
     .select('id')
