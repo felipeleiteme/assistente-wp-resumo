@@ -9,20 +9,30 @@ export async function getSummary(transcript: string): Promise<{
     throw new Error('QWEN_API_KEY não está configurada.');
   }
 
-  // Prompt para o Qwen gerar um resumo completo e uma versão curta
-  const prompt = `Você é um assistente que resume conversas de grupos do WhatsApp de forma profissional e objetiva.
+  // PROMPT V1.6 - Focado em Análise Qualitativa e Quantitativa
+  const prompt = `Você é um analista de negócios sênior especializado em Customer Success. Sua função é analisar transcrições de grupos de WhatsApp entre uma empresa (nós) e nossos clientes, e extrair inteligência de negócios.
 
-Analise as mensagens abaixo e gere:
-1. Um resumo completo (3-5 parágrafos) destacando os principais tópicos, decisões e ações.
-2. Uma mensagem curta (1-2 frases) em tom casual para compartilhar no grupo.
+Analise as mensagens abaixo e gere DOIS formatos de saída, dentro de um JSON:
+
+1.  **"full" (Análise Completa):**
+    Este é o relatório interno. Seja direto, analítico e use bullet points. Gere o seguinte:
+    * **Resumo Narrativo:** (O que aconteceu? 2-3 parágrafos).
+    * **Análise de Sentimento (Clima):** (Qual é o "clima" do grupo? Ex: 'Positivo', 'Neutro', 'Tensão', 'Urgência').
+    * **Pedidos Recorrentes / Principais Dúvidas:** (Quais perguntas ou pedidos se repetiram? Quem pediu?).
+    * **KPIs e Métricas Citadas:** (Extraia números, datas de entrega, prazos. Ex: 'Entrega antecipada (10/11 -> 06/11)').
+    * **Pontos de Ação / Próximos Passos:** (Quais ações foram definidas? Quem é o responsável?).
+    * **Ideias/Oportunidades de Melhoria:** (O que podemos aprender ou melhorar com base na conversa?).
+
+2.  **"short" (Mensagem Casual):**
+    Esta é a mensagem curta (1-2 frases) que será postada no grupo do WhatsApp. Deve ser casual e amigável.
 
 Mensagens:
 ${transcript}
 
-Formato de resposta (JSON):
+Formato de resposta (JSON OBRIGATÓRIO):
 {
-  "full": "resumo completo aqui",
-  "short": "mensagem curta aqui"
+  "full": "## Resumo Narrativo\n...\n\n## Análise de Sentimento\n...\n\n## Pedidos Recorrentes\n...\n\n## KPIs e Métricas\n...\n\n## Pontos de Ação\n...\n\n## Oportunidades de Melhoria\n...",
+  "short": "mensagem curta e casual aqui"
 }`;
 
   const response = await fetch(apiUrl, {
@@ -32,10 +42,10 @@ Formato de resposta (JSON):
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'qwen-turbo',
+      model: 'qwen-turbo', // ou 'qwen-max' para melhor qualidade
       input: {
         messages: [
-          { role: 'system', content: 'Você é um assistente especializado em resumir conversas.' },
+          { role: 'system', content: 'Você é um analista de negócios sênior.' },
           { role: 'user', content: prompt },
         ],
       },
@@ -65,6 +75,7 @@ Formato de resposta (JSON):
     };
   } catch {
     // Se não for JSON, usar o conteúdo direto como resumo completo
+    console.warn('Qwen não retornou JSON. Usando resposta direta.');
     return {
       full: content,
       short: 'Resumo do dia disponível! Confira o link abaixo.',
