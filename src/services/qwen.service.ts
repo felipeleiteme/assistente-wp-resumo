@@ -59,7 +59,7 @@ Formato de resposta (JSON OBRIGATÓRIO):
     throw new Error(`Erro ao chamar Qwen API: ${response.statusText}`);
   }
 
-  const result = await response.json();
+  const result = await response.json() as any;
   const content = result.output?.choices?.[0]?.message?.content;
 
   if (!content) {
