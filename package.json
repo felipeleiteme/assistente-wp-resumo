@@ -9,7 +9,11 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "tsc",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "verify-credentials": "npx tsx scripts/verify-credentials.ts",
+    "test-daily-summary": "npx tsx scripts/test-daily-summary.ts",
+    "security-check": "./scripts/security-instructions.sh",
+    "help-setup": "cat scripts/security-instructions.sh"
   },
   "keywords": [
     "whatsapp",
