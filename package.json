@@ -10,10 +10,11 @@
     "dev": "vercel dev",
     "build": "tsc",
     "deploy": "vercel --prod",
-    "verify-credentials": "npx tsx scripts/verify-credentials.ts",
-    "test-daily-summary": "npx tsx scripts/test-daily-summary.ts",
+    "verify-credentials": "npx tsx tests/unit/verify-credentials.ts",
+    "test-daily-summary": "npx tsx tests/integration/test-daily-summary.ts",
     "security-check": "./scripts/security-instructions.sh",
-    "help-setup": "cat scripts/security-instructions.sh"
+    "help-setup": "cat scripts/security-instructions.sh",
+    "generate-real-report": "npx tsx scripts/generate-real-report.ts"
   },
   "keywords": [
     "whatsapp",
@@ -25,6 +26,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
     "@types/node": "^20.10.6",
+    "dotenv": "^17.2.3",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
