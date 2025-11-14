@@ -121,9 +121,9 @@ export async function generateWeeklyInsights(stats: WeeklyStats): Promise<string
     throw new Error('QWEN_API_KEY não configurada');
   }
 
-  const prompt = `Você é um analista de dados sênior especializado em Customer Success e Business Intelligence.
+  const prompt = `Você é um assistente de análise de dados que gera relatórios semanais sobre grupos de WhatsApp.
 
-Analise os dados da semana abaixo e gere um RELATÓRIO ESTRATÉGICO completo e estruturado.
+Analise os dados da semana abaixo e gere um relatório claro e objetivo.
 
 ## DADOS DA SEMANA (${stats.weekStart} a ${stats.weekEnd}):
 
@@ -147,41 +147,42 @@ ${stats.peakHours.map(h => `- ${h.hour}h: ${h.count} mensagens`).join('\n')}
 
 ---
 
-## FORMATO DO RELATÓRIO (OBRIGATÓRIO):
+## INSTRUÇÕES PARA O RELATÓRIO:
 
-Gere um relatório em Markdown com as seguintes seções:
+**IMPORTANTE:** Analise o VOLUME e CONTEXTO dos dados antes de gerar o relatório:
+
+- Se o volume for BAIXO (< 50 mensagens) ou dados de TESTE: Use tom casual, reconheça que é início de uso/teste, evite alarmes desnecessários
+- Se o volume for MÉDIO/ALTO (> 50 mensagens): Use análise mais profunda e insights estratégicos
+
+Gere um relatório em Markdown com estas seções:
 
 ### 📊 Resumo Executivo
-(2-3 parágrafos com visão geral da semana)
+(Visão geral da semana - adapte o tom ao volume de dados)
 
 ### 📈 Análise de Tendências
-- Identificar padrões de crescimento ou queda
-- Comparar dias úteis vs fim de semana
-- Destacar anomalias
+- Padrões observados ao longo da semana
+- Comparações relevantes (dias úteis vs fim de semana, se aplicável)
+- Destaques importantes
 
 ### 👥 Análise de Engajamento
-- Grupos com maior/menor atividade
-- Participantes mais/menos ativos
+- Grupos mais ativos
 - Distribuição de participação
+- Padrões de uso
 
 ### ⏰ Padrões Temporais
-- Melhores horários para comunicação
-- Dias de maior engajamento
-- Períodos de baixa atividade
+- Horários com mais atividade
+- Distribuição ao longo da semana
 
-### 🎯 Insights Estratégicos
-(3-5 insights acionáveis, numerados)
+### 🎯 Insights e Observações
+(2-3 insights práticos baseados nos dados reais - evite especulação excessiva)
 
-### ⚠️ Alertas e Pontos de Atenção
-(Riscos, quedas de engajamento, grupos inativos)
-
-### 💡 Recomendações
-(3-5 ações concretas para a próxima semana)
+### 💡 Sugestões
+(1-2 sugestões relevantes ao contexto - não force recomendações se os dados forem limitados)
 
 ### 📌 Conclusão
-(Parágrafo final com principais takeaways)
+(Resumo objetivo dos principais pontos)
 
-IMPORTANTE: Seja objetivo, quantitativo e focado em insights que ajudem na tomada de decisão.`;
+**TOM:** Seja factual, objetivo e proporcional ao volume de dados. Evite dramatizar cenários de baixa atividade ou dados de teste.`;
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -190,11 +191,12 @@ IMPORTANTE: Seja objetivo, quantitativo e focado em insights que ajudem na tomad
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'qwen-plus', // Usar modelo mais poderoso para análises
+      model: 'qwen-turbo',
       messages: [
-        { role: 'system', content: 'Você é um analista de dados sênior.' },
+        { role: 'system', content: 'Você é um assistente de análise de dados que gera relatórios objetivos e proporcionais ao contexto dos dados apresentados.' },
         { role: 'user', content: prompt },
       ],
+      temperature: 0.5,
     }),
   });
 
