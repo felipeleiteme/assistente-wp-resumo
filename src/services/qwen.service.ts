@@ -19,30 +19,34 @@ export async function getSummary(transcript: string): Promise<{
     };
   }
 
-  // PROMPT V1.6 - Focado em Análise Qualitativa e Quantitativa
-  const prompt = `Você é um analista de negócios sênior especializado em Customer Success. Sua função é analisar transcrições de grupos de WhatsApp entre uma empresa (nós) e nossos clientes, e extrair inteligência de negócios.
+  // PROMPT V2.0 - Anti-Alucinação: Base APENAS no conteúdo fornecido
+  const prompt = `Você é um assistente de análise de conversas de WhatsApp. Sua função é resumir APENAS o que está escrito nas mensagens abaixo, SEM inventar, inferir ou adicionar informações que não existem no texto.
 
-Analise as mensagens abaixo e gere DOIS formatos de saída, dentro de um JSON:
+⚠️ REGRAS CRÍTICAS:
+1. Use APENAS informações presentes nas mensagens fornecidas
+2. Se não houver informações sobre algo (ex: KPIs, datas, ações), escreva "Não identificado nas mensagens"
+3. NÃO invente contextos, motivações ou detalhes que não estão explícitos
+4. Cite exatamente o que foi dito, com aspas se necessário
+5. Se as mensagens forem casuais/descontraídas, reflita isso no resumo
 
-1.  **"full" (Análise Completa):**
-    Este é o relatório interno. Seja direto, analítico e use bullet points. Gere o seguinte:
-    * **Resumo Narrativo:** (O que aconteceu? 2-3 parágrafos).
-    * **Análise de Sentimento (Clima):** (Qual é o "clima" do grupo? Ex: 'Positivo', 'Neutro', 'Tensão', 'Urgência').
-    * **Pedidos Recorrentes / Principais Dúvidas:** (Quais perguntas ou pedidos se repetiram? Quem pediu?).
-    * **KPIs e Métricas Citadas:** (Extraia números, datas de entrega, prazos. Ex: 'Entrega antecipada (10/11 -> 06/11)').
-    * **Pontos de Ação / Próximos Passos:** (Quais ações foram definidas? Quem é o responsável?).
-    * **Ideias/Oportunidades de Melhoria:** (O que podemos aprender ou melhorar com base na conversa?).
+Analise as mensagens e gere UM JSON com dois campos:
 
-2.  **"short" (Mensagem Casual):**
-    Esta é a mensagem curta (1-2 frases) que será postada no grupo do WhatsApp. Deve ser casual e amigável.
+**"full"** - Relatório completo em markdown com:
+- **Resumo Narrativo**: O que foi discutido? (baseado APENAS nas mensagens)
+- **Análise de Sentimento**: Tom geral da conversa (Positivo, Neutro, Urgente, etc)
+- **Principais Tópicos**: Liste os assuntos abordados (literalmente)
+- **Decisões/Ações**: Apenas se explicitamente mencionadas
+- **Observações**: Qualquer detalhe relevante citado
 
-Mensagens:
+**"short"** - Mensagem curta (1-2 frases) casual para WhatsApp
+
+Mensagens para analisar:
 ${transcript}
 
-Formato de resposta (JSON OBRIGATÓRIO):
+RESPONDA APENAS COM O JSON:
 {
-  "full": "## Resumo Narrativo\n...\n\n## Análise de Sentimento\n...\n\n## Pedidos Recorrentes\n...\n\n## KPIs e Métricas\n...\n\n## Pontos de Ação\n...\n\n## Oportunidades de Melhoria\n...",
-  "short": "mensagem curta e casual aqui"
+  "full": "## Resumo Narrativo\n...\n\n## Análise de Sentimento\n...\n\n## Principais Tópicos\n...\n\n## Decisões/Ações\n...\n\n## Observações\n...",
+  "short": "mensagem curta aqui"
 }`;
 
   const response = await fetch(apiUrl, {
@@ -54,9 +58,10 @@ Formato de resposta (JSON OBRIGATÓRIO):
     body: JSON.stringify({
       model: 'qwen-turbo',
       messages: [
-        { role: 'system', content: 'Você é um analista de negócios sênior.' },
+        { role: 'system', content: 'Você é um assistente preciso que resume conversas baseando-se APENAS no conteúdo fornecido, sem inventar informações.' },
         { role: 'user', content: prompt },
       ],
+      temperature: 0.3, // Reduzir criatividade/alucinação
     }),
   });
 
