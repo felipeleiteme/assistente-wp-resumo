@@ -232,9 +232,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .content ul {
           margin: 20px 0;
           padding-left: 0;
-          background: #f8f9fa;
-          border-radius: 8px;
-          padding: 20px;
         }
         .content li {
           margin-left: 35px;
