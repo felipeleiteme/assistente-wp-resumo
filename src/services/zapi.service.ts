@@ -19,7 +19,7 @@ async function getGroupIdByName(groupId: string): Promise<string> {
     });
 
     if (response.ok) {
-      const chats = await response.json();
+      const chats = await response.json() as any[];
       const group = chats.find((chat: any) =>
         chat.isGroup &&
         (chat.phone === groupId ||
