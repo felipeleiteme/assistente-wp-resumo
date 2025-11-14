@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getWeeklyReportById } from '../src/services/supabase-weekly.service';
+import { getWeeklyReportById, getPreviousWeekReport, getNextWeekReport } from '../src/services/supabase-weekly.service';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const id = req.query.id as string;
@@ -9,6 +9,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const report = await getWeeklyReportById(id);
+
+  // Buscar relatórios adjacentes para navegação
+  let previousReport = null;
+  let nextReport = null;
+
+  if (report) {
+    previousReport = await getPreviousWeekReport(report.week_start);
+    nextReport = await getNextWeekReport(report.week_start);
+  }
 
   if (!report) {
     return res.status(404).send(`
@@ -47,16 +56,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Converter Markdown para HTML
-  const htmlContent = report.report_content
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/^\*\* (.*?):/gim, '<strong>$1:</strong>')
-    .replace(/^\* (.*$)/gim, '<li>$1</li>')
-    .replace(/^- (.*$)/gim, '<li>$1</li>')
-    .replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
+  let htmlContent = report.report_content;
+
+  // 1. Substituir títulos (h3, h2, h1)
+  htmlContent = htmlContent.replace(/^### (.+)$/gim, '<h3>$1</h3>');
+  htmlContent = htmlContent.replace(/^## (.+)$/gim, '<h2>$2</h2>');
+  htmlContent = htmlContent.replace(/^# (.+)$/gim, '<h1>$1</h1>');
+
+  // 2. Bold (** texto **) - precisa vir antes das listas
+  htmlContent = htmlContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // 3. Itálico (* texto *)
+  htmlContent = htmlContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // 4. Links [texto](url)
+  htmlContent = htmlContent.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // 5. Separadores (---)
+  htmlContent = htmlContent.replace(/^---$/gim, '<hr>');
+
+  // 6. Listas não ordenadas (- item ou * item)
+  htmlContent = htmlContent.replace(/^[-*] (.+)$/gim, '<li>$1</li>');
+
+  // 7. Listas ordenadas (1. item)
+  htmlContent = htmlContent.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+
+  // 8. Envolver listas consecutivas em <ul>
+  htmlContent = htmlContent.replace(/(<li>.*<\/li>\n?)+/gs, '<ul>$&</ul>');
+
+  // 9. Parágrafos (quebras duplas)
+  htmlContent = htmlContent.replace(/\n\n/g, '</p><p>');
+
+  // 10. Quebras simples
+  htmlContent = htmlContent.replace(/\n/g, '<br>');
+
+  // 11. Envolver em parágrafos iniciais
+  htmlContent = '<p>' + htmlContent + '</p>';
+
+  // 12. Limpar parágrafos vazios
+  htmlContent = htmlContent.replace(/<p><\/p>/g, '');
+  htmlContent = htmlContent.replace(/<p><br><\/p>/g, '');
+
+  // 13. Títulos não devem estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<h[123]>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<\/h[123]>)<\/p>/g, '$1');
+
+  // 14. HR não deve estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<hr>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<hr>)<\/p>/g, '$1');
+
+  // 15. UL não deve estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<ul>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<\/ul>)<\/p>/g, '$1');
 
   return res.status(200).send(`
     <!DOCTYPE html>
@@ -100,6 +151,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           opacity: 0.9;
           font-size: 16px;
         }
+        .week-navigation {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 40px;
+          background: #f8f9fa;
+          border-bottom: 1px solid #dee2e6;
+        }
+        .nav-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 24px;
+          background: #007bff;
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px rgba(0,123,255,0.2);
+        }
+        .nav-btn:hover {
+          background: #0056b3;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        .nav-btn.disabled {
+          background: #e9ecef;
+          color: #6c757d;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+        .nav-btn .arrow {
+          font-size: 18px;
+          font-weight: bold;
+        }
+        .nav-current {
+          font-size: 14px;
+          color: #6c757d;
+          text-align: center;
+          flex: 1;
+          margin: 0 20px;
+        }
         .stats-bar {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -128,45 +223,108 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           letter-spacing: 0.5px;
         }
         .content {
-          padding: 40px;
-          line-height: 1.8;
-          color: #333;
+          padding: 50px;
+          line-height: 1.9;
+          color: #2c3e50;
+          font-size: 16px;
+          max-width: 900px;
+          margin: 0 auto;
         }
         .content h1 {
           color: #007bff;
-          font-size: 28px;
-          margin-top: 40px;
-          margin-bottom: 20px;
+          font-size: 32px;
+          margin-top: 50px;
+          margin-bottom: 25px;
           border-bottom: 3px solid #007bff;
-          padding-bottom: 10px;
+          padding-bottom: 15px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
         }
         .content h1:first-child {
           margin-top: 0;
         }
         .content h2 {
-          color: #343a40;
-          margin-top: 30px;
-          margin-bottom: 15px;
-          font-size: 24px;
-          border-bottom: 2px solid #007bff;
-          padding-bottom: 10px;
+          color: #2c3e50;
+          margin-top: 45px;
+          margin-bottom: 20px;
+          font-size: 26px;
+          border-bottom: none;
+          padding-bottom: 0;
+          font-weight: 700;
+          background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          padding-left: 15px;
+          border-left: 4px solid #007bff;
         }
         .content h3 {
           color: #495057;
-          margin-top: 25px;
-          margin-bottom: 12px;
+          margin-top: 30px;
+          margin-bottom: 15px;
           font-size: 20px;
+          font-weight: 600;
         }
         .content p {
-          margin-bottom: 15px;
+          margin-bottom: 18px;
+          text-align: justify;
+          hyphens: auto;
+        }
+        .content ul {
+          margin: 20px 0;
+          padding-left: 0;
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
         }
         .content li {
-          margin-left: 25px;
-          margin-bottom: 10px;
-          line-height: 1.6;
+          margin-left: 35px;
+          margin-bottom: 14px;
+          line-height: 1.8;
+          list-style-type: none;
+          position: relative;
+          padding-left: 10px;
+        }
+        .content li:before {
+          content: "▸";
+          position: absolute;
+          left: -25px;
+          color: #007bff;
+          font-size: 18px;
+          font-weight: bold;
         }
         .content strong {
+          color: #0056b3;
+          font-weight: 700;
+          background: rgba(0, 123, 255, 0.05);
+          padding: 2px 6px;
+          border-radius: 3px;
+        }
+        .content em {
+          font-style: italic;
+          color: #6c757d;
+          background: #f8f9fa;
+          padding: 1px 4px;
+          border-radius: 2px;
+        }
+        .content hr {
+          border: none;
+          height: 3px;
+          background: linear-gradient(90deg, #007bff 0%, transparent 100%);
+          margin: 40px 0;
+        }
+        .content a {
           color: #007bff;
+          text-decoration: none;
+          border-bottom: 2px solid #007bff;
+          padding-bottom: 1px;
+          transition: all 0.3s ease;
+        }
+        .content a:hover {
+          background: #007bff;
+          color: white;
+          padding: 2px 6px;
+          border-radius: 3px;
         }
         .footer {
           background: #f8f9fa;
@@ -201,12 +359,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .header h1 {
             font-size: 24px;
           }
+          .week-navigation {
+            padding: 15px;
+            flex-direction: column;
+            gap: 15px;
+          }
+          .nav-btn {
+            width: 100%;
+            justify-content: center;
+          }
+          .nav-current {
+            margin: 10px 0;
+            order: -1;
+          }
           .stats-bar {
             grid-template-columns: 1fr;
             padding: 20px;
           }
           .content {
-            padding: 20px;
+            padding: 30px 20px;
+            font-size: 15px;
+            line-height: 1.8;
+          }
+          .content h1 {
+            font-size: 26px;
+            margin-top: 35px;
+          }
+          .content h2 {
+            font-size: 22px;
+            margin-top: 30px;
+            padding-left: 12px;
+          }
+          .content h3 {
+            font-size: 18px;
+          }
+          .content p {
+            text-align: left;
+          }
+          .content ul {
+            padding: 15px;
+          }
+          .content li {
+            margin-left: 25px;
+            font-size: 14px;
           }
         }
       </style>
@@ -218,6 +413,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           <div class="meta">
             <span class="badge">📅 ${new Date(report.week_start).toLocaleDateString('pt-BR')} - ${new Date(report.week_end).toLocaleDateString('pt-BR')}</span>
           </div>
+        </div>
+
+        <div class="week-navigation">
+          ${previousReport
+            ? `<a href="/api/relatorio-semanal?id=${previousReport.id}" class="nav-btn">
+                 <span class="arrow">←</span>
+                 <span>Semana Anterior<br><small>${new Date(previousReport.week_start).toLocaleDateString('pt-BR')} - ${new Date(previousReport.week_end).toLocaleDateString('pt-BR')}</small></span>
+               </a>`
+            : `<span class="nav-btn disabled">
+                 <span class="arrow">←</span>
+                 <span>Primeira Semana</span>
+               </span>`
+          }
+          <div class="nav-current">
+            <strong>Semana Atual</strong><br>
+            <small>${new Date(report.week_start).toLocaleDateString('pt-BR')} - ${new Date(report.week_end).toLocaleDateString('pt-BR')}</small>
+          </div>
+          ${nextReport
+            ? `<a href="/api/relatorio-semanal?id=${nextReport.id}" class="nav-btn">
+                 <span>Próxima Semana<br><small>${new Date(nextReport.week_start).toLocaleDateString('pt-BR')} - ${new Date(nextReport.week_end).toLocaleDateString('pt-BR')}</small></span>
+                 <span class="arrow">→</span>
+               </a>`
+            : `<span class="nav-btn disabled">
+                 <span>Última Semana</span>
+                 <span class="arrow">→</span>
+               </span>`
+          }
         </div>
 
         <div class="stats-bar">

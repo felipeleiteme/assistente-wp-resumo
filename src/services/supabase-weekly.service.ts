@@ -95,3 +95,47 @@ export async function getWeeklyReportById(id: string): Promise<{
 
   return data;
 }
+
+export async function getPreviousWeekReport(weekStart: string): Promise<{
+  id: string;
+  week_start: string;
+  week_end: string;
+} | null> {
+  const client = getSupabaseClient();
+
+  const { data, error } = await client
+    .from('weekly_reports')
+    .select('id, week_start, week_end')
+    .lt('week_start', weekStart)
+    .order('week_start', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
+}
+
+export async function getNextWeekReport(weekStart: string): Promise<{
+  id: string;
+  week_start: string;
+  week_end: string;
+} | null> {
+  const client = getSupabaseClient();
+
+  const { data, error } = await client
+    .from('weekly_reports')
+    .select('id, week_start, week_end')
+    .gt('week_start', weekStart)
+    .order('week_start', { ascending: true })
+    .limit(1)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
+}
