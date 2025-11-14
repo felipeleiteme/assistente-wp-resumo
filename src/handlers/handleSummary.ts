@@ -2,30 +2,37 @@ import { getDailyMessages, getDistinctGroupIdsToday, getGroupName, saveSummary, 
 import { getSummary } from '../services/qwen.service';
 
 export async function handleSummary(): Promise<void> {
-  console.log('Iniciando processo de resumo multi-grupo...');
+  const now = new Date().toISOString();
+  console.log(`[${now}] Iniciando processo de resumo multi-grupo...`);
+  console.log('[DEBUG] TEAMS_WEBHOOK_URL configurado:', !!process.env.TEAMS_WEBHOOK_URL);
 
   // 1. Buscar grupos ativos (como antes)
+  console.log('[DEBUG] Buscando grupos ativos de hoje...');
   const groupIds = await getDistinctGroupIdsToday();
+  console.log(`[DEBUG] Grupos encontrados: ${groupIds.length}`, groupIds);
+
   if (groupIds.length === 0) {
-    console.log('Nenhum grupo ativo hoje.');
+    console.log('[WARN] Nenhum grupo ativo hoje - nenhum resumo será gerado.');
     // (Pula a limpeza se não houver grupos, pois a limpeza só roda após o processamento)
     return;
   }
 
-  console.log(`Encontrados ${groupIds.length} grupos ativos. Iniciando loop...`);
+  console.log(`[INFO] Encontrados ${groupIds.length} grupos ativos. Iniciando loop...`);
 
   // 2. Iterar sobre cada grupo (como antes)
   for (const groupId of groupIds) {
     try {
-      console.log(`Processando grupo: ${groupId}`);
+      console.log(`[DEBUG] Processando grupo: ${groupId}`);
 
       // Buscar nome do grupo
       const groupName = await getGroupName(groupId);
-      console.log(`Nome do grupo: ${groupName}`);
+      console.log(`[DEBUG] Nome do grupo: ${groupName}`);
 
       const messages = await getDailyMessages(groupId);
+      console.log(`[DEBUG] Mensagens encontradas para ${groupName}: ${messages.length}`);
+
       if (messages.length === 0) {
-        console.log(`Grupo ${groupName} sem novas mensagens.`);
+        console.log(`[WARN] Grupo ${groupName} sem novas mensagens - pulando.`);
         continue;
       }
 
@@ -33,9 +40,9 @@ export async function handleSummary(): Promise<void> {
         .map(msg => `[${msg.timestamp}] ${msg.from}: ${msg.text}`)
         .join('\n');
 
-      console.log(`Gerando resumo para ${messages.length} mensagens...`);
+      console.log(`[INFO] Gerando resumo para ${messages.length} mensagens...`);
       const summary = await getSummary(transcript);
-      console.log(`Resumo gerado. Short: ${summary.short.substring(0, 50)}...`);
+      console.log(`[INFO] Resumo gerado. Short: ${summary.short.substring(0, 50)}...`);
 
       const summaryRecord = await saveSummary({
         content: summary.full,
@@ -44,18 +51,18 @@ export async function handleSummary(): Promise<void> {
       }, groupId);
 
       const summaryUrl = `${process.env.VERCEL_URL || 'https://assistente-wp-resumo.vercel.app'}/api/resumo?id=${summaryRecord.id}`;
-      console.log(`Resumo salvo. URL: ${summaryUrl}`);
+      console.log(`[INFO] Resumo salvo. URL: ${summaryUrl}`);
 
       // 6. ENVIAR NOTIFICAÇÃO PARA MS TEAMS
-      console.log('Enviando notificação para MS Teams...');
+      console.log('[DEBUG] Preparando envio para MS Teams...');
       await sendToTeams(summary.short, summaryUrl, groupName)
-        .then(() => console.log('Teams: OK'))
-        .catch(e => console.error('Teams: ERRO', e.message));
+        .then(() => console.log('[SUCCESS] Teams: Notificação enviada com sucesso!'))
+        .catch(e => console.error('[ERROR] Teams: Falha ao enviar:', e.message));
 
-      console.log(`Grupo ${groupName} processado com sucesso.`);
+      console.log(`[SUCCESS] Grupo ${groupName} processado com sucesso.`);
 
     } catch (error) {
-      console.error(`Falha ao processar grupo ${groupId}:`, error);
+      console.error(`[ERROR] Falha ao processar grupo ${groupId}:`, error);
     }
   }
 
