@@ -58,6 +58,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Converter Markdown para HTML
   let htmlContent = report.report_content;
 
+  // 0. Limpar blocos de código markdown (```markdown ... ```)
+  htmlContent = htmlContent.replace(/```markdown\n?/gi, '');
+  htmlContent = htmlContent.replace(/```\n?/g, '');
+
   // 1. Substituir títulos (h3, h2, h1)
   htmlContent = htmlContent.replace(/^### (.+)$/gim, '<h3>$1</h3>');
   htmlContent = htmlContent.replace(/^## (.+)$/gim, '<h2>$1</h2>');

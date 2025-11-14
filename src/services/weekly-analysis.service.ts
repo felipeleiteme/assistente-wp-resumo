@@ -154,35 +154,39 @@ ${stats.peakHours.map(h => `- ${h.hour}h: ${h.count} mensagens`).join('\n')}
 - Se o volume for BAIXO (< 50 mensagens) ou dados de TESTE: Use tom casual, reconheça que é início de uso/teste, evite alarmes desnecessários
 - Se o volume for MÉDIO/ALTO (> 50 mensagens): Use análise mais profunda e insights estratégicos
 
-Gere um relatório em Markdown com estas seções:
+Gere um relatório em Markdown puro (SEM blocos de código, SEM \`\`\`markdown) com estas seções:
 
-### 📊 Resumo Executivo
+## 📊 Resumo Executivo
 (Visão geral da semana - adapte o tom ao volume de dados)
 
-### 📈 Análise de Tendências
+## 📈 Análise de Tendências
 - Padrões observados ao longo da semana
 - Comparações relevantes (dias úteis vs fim de semana, se aplicável)
 - Destaques importantes
 
-### 👥 Análise de Engajamento
+## 👥 Análise de Engajamento
 - Grupos mais ativos
 - Distribuição de participação
 - Padrões de uso
 
-### ⏰ Padrões Temporais
+## ⏰ Padrões Temporais
 - Horários com mais atividade
 - Distribuição ao longo da semana
 
-### 🎯 Insights e Observações
+## 🎯 Insights e Observações
 (2-3 insights práticos baseados nos dados reais - evite especulação excessiva)
 
-### 💡 Sugestões
+## 💡 Sugestões
 (1-2 sugestões relevantes ao contexto - não force recomendações se os dados forem limitados)
 
-### 📌 Conclusão
+## 📌 Conclusão
 (Resumo objetivo dos principais pontos)
 
-**TOM:** Seja factual, objetivo e proporcional ao volume de dados. Evite dramatizar cenários de baixa atividade ou dados de teste.`;
+**IMPORTANTE:**
+- Use ## para todos os títulos de seção
+- NÃO envolva o conteúdo em blocos de código \`\`\`markdown
+- Retorne apenas o markdown puro, pronto para renderização
+- TOM: Seja factual, objetivo e proporcional ao volume de dados`;
 
   const response = await fetch(apiUrl, {
     method: 'POST',
