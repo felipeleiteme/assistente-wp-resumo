@@ -1,0 +1,14 @@
+
+
+🎉 RELATÓRIO DIÁRIO COMPLETO GERADO!
+
+📊 Carbon Capital :: Cashforce
+• 17 mensagens processadas
+• 3 participantes ativos
+• 1h29min de atividade
+• 100% das solicitações resolvidas
+
+✅ Arquivo salvo: RELATORIO-CARBON-CAPITAL.md
+✅ Script disponível: scripts/carbon-capital-report.ts
+
+
