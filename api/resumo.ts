@@ -179,27 +179,111 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           font-size: 14px;
         }
         .content {
-          padding: 40px;
-          line-height: 1.8;
-          color: #333;
+          padding: 50px;
+          line-height: 1.9;
+          color: #2c3e50;
+          font-size: 16px;
+          max-width: 900px;
+          margin: 0 auto;
+        }
+        .content h1 {
+          color: #007bff;
+          font-size: 32px;
+          margin-top: 50px;
+          margin-bottom: 25px;
+          border-bottom: 3px solid #007bff;
+          padding-bottom: 15px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+        .content h1:first-child {
+          margin-top: 0;
         }
         .content h2 {
-          color: #343a40; /* TEXTO ESCURO (QUASE PRETO) */
-          margin-top: 30px;
-          margin-bottom: 15px;
-          font-size: 22px;
-          border-bottom: 2px solid #007bff; /* BORDA AZUL PRIMÁRIO */
-          padding-bottom: 10px;
+          color: #2c3e50;
+          margin-top: 45px;
+          margin-bottom: 20px;
+          font-size: 26px;
+          border-bottom: none;
+          padding-bottom: 0;
+          font-weight: 700;
+          background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          padding-left: 15px;
+          border-left: 4px solid #007bff;
         }
         .content h2:first-child {
           margin-top: 0;
         }
-        .content p {
+        .content h3 {
+          color: #495057;
+          margin-top: 30px;
           margin-bottom: 15px;
+          font-size: 20px;
+          font-weight: 600;
+        }
+        .content p {
+          margin-bottom: 18px;
+          text-align: justify;
+          hyphens: auto;
+        }
+        .content ul {
+          margin: 20px 0;
+          padding-left: 0;
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
         }
         .content li {
-          margin-left: 25px;
-          margin-bottom: 8px;
+          margin-left: 35px;
+          margin-bottom: 14px;
+          line-height: 1.8;
+          list-style-type: none;
+          position: relative;
+          padding-left: 10px;
+        }
+        .content li:before {
+          content: "▸";
+          position: absolute;
+          left: -25px;
+          color: #007bff;
+          font-size: 18px;
+          font-weight: bold;
+        }
+        .content strong {
+          color: #0056b3;
+          font-weight: 700;
+          background: rgba(0, 123, 255, 0.05);
+          padding: 2px 6px;
+          border-radius: 3px;
+        }
+        .content em {
+          font-style: italic;
+          color: #6c757d;
+          background: #f8f9fa;
+          padding: 1px 4px;
+          border-radius: 2px;
+        }
+        .content hr {
+          border: none;
+          height: 3px;
+          background: linear-gradient(90deg, #007bff 0%, transparent 100%);
+          margin: 40px 0;
+        }
+        .content a {
+          color: #007bff;
+          text-decoration: none;
+          border-bottom: 2px solid #007bff;
+          padding-bottom: 1px;
+          transition: all 0.3s ease;
+        }
+        .content a:hover {
+          background: #007bff;
+          color: white;
+          padding: 2px 6px;
+          border-radius: 3px;
         }
         .footer {
           background: #f8f9fa;
@@ -221,18 +305,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         @media (max-width: 600px) {
           body {
             padding: 0;
-            background: white; /* Fundo branco em mobile */
+            background: white;
           }
           .container {
             border-radius: 0;
             box-shadow: none;
             border: none;
           }
-          .header, .content, .footer {
-            padding: 20px;
+          .header {
+            padding: 30px 20px;
           }
           .header h1 {
+            font-size: 24px;
+          }
+          .content {
+            padding: 30px 20px;
+            font-size: 15px;
+            line-height: 1.8;
+          }
+          .content h1 {
+            font-size: 26px;
+            margin-top: 35px;
+          }
+          .content h2 {
             font-size: 22px;
+            margin-top: 30px;
+            padding-left: 12px;
+          }
+          .content h3 {
+            font-size: 18px;
+          }
+          .content p {
+            text-align: left;
+          }
+          .content ul {
+            padding: 15px;
+          }
+          .content li {
+            margin-left: 25px;
+            font-size: 14px;
+          }
+          .footer {
+            padding: 20px;
           }
         }
       </style>
