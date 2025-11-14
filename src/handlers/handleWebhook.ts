@@ -18,12 +18,27 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
     throw new Error('No message data provided');
   }
 
-  // 3. Salvar mensagem crua no Supabase
+  // 3. Extrair informações da mensagem (suporta múltiplos formatos do Z-API)
+  const groupId = messageData.chatId || messageData.chat?.id || messageData.instanceId || null;
+  const fromNumber = messageData.from || messageData.phone || messageData.author || null;
+  const textContent = messageData.text?.message || messageData.body || messageData.content || null;
+  const timestamp = messageData.momment || messageData.timestamp || new Date().toISOString();
+
+  console.log('[Webhook] Mensagem recebida:', {
+    groupId,
+    fromNumber,
+    textPreview: textContent?.substring(0, 50),
+    timestamp
+  });
+
+  // 4. Salvar mensagem crua no Supabase
   await saveMessage({
     raw_data: messageData,
-    from: messageData.from || messageData.phone || null,
-    group_id: messageData.chatId || messageData.instanceId || null,
-    text: messageData.text?.message || messageData.body || null,
-    timestamp: messageData.momment || messageData.timestamp || new Date().toISOString(),
+    from: fromNumber,
+    group_id: groupId,
+    text: textContent,
+    timestamp: timestamp,
   });
+
+  console.log('[Webhook] Mensagem salva com sucesso');
 }
