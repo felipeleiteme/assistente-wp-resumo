@@ -1,1 +1,29 @@
+# Environment variables
 .env*.local
+.env
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+reports/
+config/.env.clean
+
+# Documentation (local only)
+NAVEGACAO.md
+RESUMO-ORGANIZACAO.md
+RESUMO-ORGANIZACAO.txt
