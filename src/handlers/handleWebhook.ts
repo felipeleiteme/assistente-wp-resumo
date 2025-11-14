@@ -26,6 +26,7 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
   const groupId = messageData.phone || messageData.chatId || messageData.chat?.id || messageData.instanceId || null;
   const groupName = messageData.chatName || messageData.chat?.name || null;
   const fromNumber = messageData.from || messageData.participantPhone || messageData.author || null;
+  const fromName = messageData.fromName || messageData.senderName || messageData.notifyName || messageData.pushName || null;
   let textContent = messageData.text?.message || messageData.body || messageData.content || null;
   
   // NOVO: Log da estrutura do áudio se existir
@@ -74,6 +75,7 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
   console.log('[Webhook] Mensagem recebida:', {
     groupId,
     fromNumber,
+    fromName,
     textPreview: textContent?.substring(0, 50),
     timestamp,
     isAudio: Boolean(audioInfo),
@@ -83,6 +85,7 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
   await saveMessage({
     raw_data: messageData,
     from: fromNumber,
+    from_name: fromName,
     group_id: groupId,
     group_name: groupName,
     text: textContent,

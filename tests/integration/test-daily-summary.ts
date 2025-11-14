@@ -1,4 +1,4 @@
-import { handleSummary } from './src/handlers/handleSummary';
+import { handleSummary } from '../src/handlers/handleSummary';
 
 // Configurar todas as variáveis de ambiente com valores seguros
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://seu-projeto.supabase.co';

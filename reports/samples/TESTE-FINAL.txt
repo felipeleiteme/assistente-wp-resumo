@@ -1,0 +1,16 @@
+
+
+🧪 TESTE FINAL:
+Clique no link: https://assistente-wp-resumo.vercel.app/api/resumo?id=84784da0-0029-4459-ab81-609a95bee55b
+
+📋 O que você deve ver:
+• Título: 'Resumo Diário - Carbon Capital :: Cashforce'
+• 17 mensagens processadas
+• 3 participantes ativos
+• Estatísticas completas
+• Design profissional responsivo
+
+✅ Se funcionar: Sistema 100% operacional!
+❌ Se não funcionar: Verifique conexão com internet
+
+

@@ -19,6 +19,7 @@ function getSupabaseClient(): SupabaseClient {
 export async function saveMessage(message: {
   raw_data: any;
   from: string | null;
+  from_name?: string | null;
   group_id: string | null;
   group_name: string | null;
   text: string | null;
@@ -31,6 +32,7 @@ export async function saveMessage(message: {
     .insert({
       raw_data: message.raw_data,
       from_number: message.from,
+      from_name: message.from_name || null,
       group_id: message.group_id,
       group_name: message.group_name,
       text_content: message.text,
@@ -56,7 +58,7 @@ export async function getDailyMessages(groupId: string): Promise<Array<{
 
   const { data, error } = await client
     .from('messages')
-    .select('from_number, text_content, received_at')
+    .select('from_number, from_name, text_content, received_at')
     .gte('received_at', todayIso)
     .eq('group_id', groupId)
     .order('received_at', { ascending: true });
@@ -66,7 +68,7 @@ export async function getDailyMessages(groupId: string): Promise<Array<{
   }
 
   return (data || []).map(row => ({
-    from: row.from_number || 'Desconhecido',
+    from: row.from_name || row.from_number || 'Desconhecido',
     text: row.text_content || '',
     timestamp: row.received_at,
   }));
