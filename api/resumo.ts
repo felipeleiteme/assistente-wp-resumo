@@ -77,13 +77,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     groupName = messageData.group_name;
   }
 
-  // Converter Markdown para HTML básico
-  const htmlContent = summary.summary_content
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^\* (.*$)/gim, '<li>$1</li>')
-    .replace(/^- (.*$)/gim, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
+  // Converter Markdown para HTML
+  let htmlContent = summary.summary_content;
+
+  // 1. Substituir títulos (h3, h2, h1)
+  htmlContent = htmlContent.replace(/^### (.+)$/gim, '<h3>$1</h3>');
+  htmlContent = htmlContent.replace(/^## (.+)$/gim, '<h2>$1</h2>');
+  htmlContent = htmlContent.replace(/^# (.+)$/gim, '<h1>$1</h1>');
+
+  // 2. Bold (** texto **) - precisa vir antes das listas
+  htmlContent = htmlContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // 3. Itálico (* texto *)
+  htmlContent = htmlContent.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // 4. Links [texto](url)
+  htmlContent = htmlContent.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+  // 5. Separadores (---)
+  htmlContent = htmlContent.replace(/^---$/gim, '<hr>');
+
+  // 6. Listas não ordenadas (- item ou * item)
+  htmlContent = htmlContent.replace(/^[-*] (.+)$/gim, '<li>$1</li>');
+
+  // 7. Listas ordenadas (1. item)
+  htmlContent = htmlContent.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+
+  // 8. Envolver listas consecutivas em <ul>
+  htmlContent = htmlContent.replace(/(<li>.*<\/li>\n?)+/gs, '<ul>$&</ul>');
+
+  // 9. Parágrafos (quebras duplas)
+  htmlContent = htmlContent.replace(/\n\n/g, '</p><p>');
+
+  // 10. Quebras simples
+  htmlContent = htmlContent.replace(/\n/g, '<br>');
+
+  // 11. Envolver em parágrafos iniciais
+  htmlContent = '<p>' + htmlContent + '</p>';
+
+  // 12. Limpar parágrafos vazios
+  htmlContent = htmlContent.replace(/<p><\/p>/g, '');
+  htmlContent = htmlContent.replace(/<p><br><\/p>/g, '');
+
+  // 13. Títulos não devem estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<h[123]>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<\/h[123]>)<\/p>/g, '$1');
+
+  // 14. HR não deve estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<hr>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<hr>)<\/p>/g, '$1');
+
+  // 15. UL não deve estar dentro de <p>
+  htmlContent = htmlContent.replace(/<p>(<ul>)/g, '$1');
+  htmlContent = htmlContent.replace(/(<\/ul>)<\/p>/g, '$1');
 
   // Renderizar página HTML
   return res.status(200).send(`
@@ -129,98 +175,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           font-size: 14px;
         }
         .content {
-          padding: 50px;
-          line-height: 1.9;
-          color: #2c3e50;
-          font-size: 16px;
-          max-width: 900px;
-          margin: 0 auto;
+          padding: 40px;
+          line-height: 1.8;
+          color: #333;
         }
         .content h2 {
-          color: #2c3e50;
-          margin-top: 45px;
-          margin-bottom: 20px;
-          font-size: 26px;
-          border-bottom: none;
-          padding-bottom: 0;
-          font-weight: 700;
-          background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          padding-left: 15px;
-          border-left: 4px solid #007bff;
+          color: #343a40; /* TEXTO ESCURO (QUASE PRETO) */
+          margin-top: 30px;
+          margin-bottom: 15px;
+          font-size: 22px;
+          border-bottom: 2px solid #007bff; /* BORDA AZUL PRIMÁRIO */
+          padding-bottom: 10px;
         }
         .content h2:first-child {
           margin-top: 0;
         }
-        .content h3 {
-          color: #495057;
-          margin-top: 30px;
-          margin-bottom: 15px;
-          font-size: 20px;
-          font-weight: 600;
-        }
         .content p {
-          margin-bottom: 18px;
-          text-align: justify;
-          hyphens: auto;
-        }
-        .content ul {
-          margin: 20px 0;
-          padding-left: 0;
-          background: #f8f9fa;
-          border-radius: 8px;
-          padding: 20px;
+          margin-bottom: 15px;
         }
         .content li {
-          margin-left: 35px;
-          margin-bottom: 14px;
-          line-height: 1.8;
-          list-style-type: none;
-          position: relative;
-          padding-left: 10px;
-        }
-        .content li:before {
-          content: "▸";
-          position: absolute;
-          left: -25px;
-          color: #007bff;
-          font-size: 18px;
-          font-weight: bold;
-        }
-        .content strong {
-          color: #0056b3;
-          font-weight: 700;
-          background: rgba(0, 123, 255, 0.05);
-          padding: 2px 6px;
-          border-radius: 3px;
-        }
-        .content em {
-          font-style: italic;
-          color: #6c757d;
-          background: #f8f9fa;
-          padding: 1px 4px;
-          border-radius: 2px;
-        }
-        .content hr {
-          border: none;
-          height: 3px;
-          background: linear-gradient(90deg, #007bff 0%, transparent 100%);
-          margin: 40px 0;
-        }
-        .content a {
-          color: #007bff;
-          text-decoration: none;
-          border-bottom: 2px solid #007bff;
-          padding-bottom: 1px;
-          transition: all 0.3s ease;
-        }
-        .content a:hover {
-          background: #007bff;
-          color: white;
-          padding: 2px 6px;
-          border-radius: 3px;
+          margin-left: 25px;
+          margin-bottom: 8px;
         }
         .footer {
           background: #f8f9fa;

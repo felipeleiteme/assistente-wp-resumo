@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 1. Substituir títulos (h3, h2, h1)
   htmlContent = htmlContent.replace(/^### (.+)$/gim, '<h3>$1</h3>');
-  htmlContent = htmlContent.replace(/^## (.+)$/gim, '<h2>$2</h2>');
+  htmlContent = htmlContent.replace(/^## (.+)$/gim, '<h2>$1</h2>');
   htmlContent = htmlContent.replace(/^# (.+)$/gim, '<h1>$1</h1>');
 
   // 2. Bold (** texto **) - precisa vir antes das listas

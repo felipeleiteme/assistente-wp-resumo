@@ -1,4 +1,9 @@
-import { handleWeeklyReport } from '../src/handlers/handleWeeklyReport';
+/**
+ * Script para testar a geração de relatórios diários
+ * Testa o fluxo completo: coleta de mensagens → geração de resumo → formatação markdown
+ */
+
+import { handleSummary } from '../src/handlers/handleSummary';
 
 // Configurar todas as variáveis de ambiente
 process.env.SUPABASE_URL = 'https://lnrnkbazzsqpaozchcoz.supabase.co';
@@ -8,31 +13,25 @@ process.env.QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/
 process.env.VERCEL_URL = 'https://assistente-wp-resumo.vercel.app';
 process.env.TEAMS_WEBHOOK_URL = 'https://cashforcefinance.webhook.office.com/webhookb2/c88879a4-90d8-45f0-9c00-91fe8a988638@d9b1523d-1479-4896-9ddd-32a7bb6bdaef/IncomingWebhook/53e05a84bd114d6c80aed50c01eb5ef3/181a843c-8634-4a03-927f-3f10476b6033/V2Ak1WSKDbXyFpsgpqn4zZPTIVz7dcKDrcQbfkGNL4GTo1';
 
-async function testWeeklyReport() {
-  console.log('🧪 Testando geração de relatório semanal...\n');
-  console.log('='.repeat(60));
+async function testDailyReport() {
+  console.log('='.repeat(80));
+  console.log('🧪 TESTE DE RELATÓRIO DIÁRIO');
+  console.log('='.repeat(80));
+  console.log();
 
   try {
-    const result = await handleWeeklyReport();
-
-    console.log('\n✅ RELATÓRIO GERADO COM SUCESSO!\n');
-    console.log('='.repeat(60));
-    console.log('📊 Detalhes do Relatório:');
-    console.log(`   - ID: ${result.reportId}`);
-    console.log(`   - URL: ${result.reportUrl}`);
-    console.log('='.repeat(60));
-    console.log('\n📧 Notificação enviada ao MS Teams!');
-    console.log('🌐 Acesse a URL acima para ver o relatório completo.');
-    console.log('\n✨ Teste concluído com sucesso!');
-
+    await handleSummary();
+    console.log();
+    console.log('='.repeat(80));
+    console.log('✅ Teste concluído com sucesso!');
+    console.log('='.repeat(80));
   } catch (error) {
-    console.error('\n❌ ERRO ao gerar relatório:');
-    console.error(error);
-    if (error instanceof Error) {
-      console.error('\nStack trace:', error.stack);
-    }
+    console.error();
+    console.error('='.repeat(80));
+    console.error('❌ Erro durante o teste:', error);
+    console.error('='.repeat(80));
     process.exit(1);
   }
 }
 
-testWeeklyReport();
+testDailyReport();
