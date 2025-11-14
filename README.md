@@ -7,6 +7,7 @@ Sistema de resumo automático de conversas WhatsApp com análise semanal, usando
 - ✅ **Webhook Z-API**: Recebe mensagens do WhatsApp em tempo real
 - ✅ **Resumo Diário**: Geração automática às 19h (via GitHub Actions)
 - ✅ **Relatório Semanal**: Análise completa toda segunda às 6h
+- ✅ **Transcrição de Áudios**: Integração automática com Gladia para voice notes
 - ✅ **Notificações MS Teams**: Cards interativos com links para resumos
 - ✅ **Páginas Web**: Visualização profissional dos resumos
 - ✅ **Multi-grupo**: Suporta múltiplos grupos WhatsApp
@@ -85,6 +86,7 @@ cp .env.example .env.local
 Variáveis necessárias:
 - `SUPABASE_URL` e `SUPABASE_ANON_KEY`
 - `QWEN_API_KEY` e `QWEN_API_URL`
+- `GLADIA_API_KEY` (opcional: `GLADIA_API_URL`, `GLADIA_DEFAULT_LANGUAGE`, `GLADIA_POLL_*`)
 - `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN`, `ZAPI_CLIENT_TOKEN`
 - `TEAMS_WEBHOOK_URL`
 - `CRON_SECRET` (para GitHub Actions)
@@ -159,7 +161,8 @@ Adicione o secret `CRON_SECRET` no repositório GitHub:
 ### Recebimento de Mensagens
 1. Usuário envia mensagem no grupo WhatsApp
 2. Z-API dispara webhook → `/api/webhooks/receiver`
-3. Mensagem é salva no Supabase com `group_name`
+3. Mensagens de texto são salvas imediatamente no Supabase
+4. Mensagens de áudio têm o link enviado para a Gladia, que transcreve o conteúdo antes de salvar (ou registra um placeholder caso falhe)
 
 ### Resumo Diário (19h BRT)
 1. GitHub Action dispara cron job

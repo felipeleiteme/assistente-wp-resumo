@@ -293,7 +293,7 @@ async function generateWeeklyReport() {
     // Salvar relatório semanal
     console.log('\n💾 Salvando relatório semanal no banco...');
     const reportRecord = await saveWeeklyReport({
-      content: summary.full + '\n\n' + JSON.stringify(weeklyAnalysis, null, 2),
+      content: summary.full,
       week_start: startDate.toISOString().split('T')[0],
       week_end: endDate.toISOString().split('T')[0],
       total_messages: totalMessages,
