@@ -25,23 +25,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .eq('id', id)
     .single();
 
-  // Buscar nome do grupo
-  let groupName = summary?.group_id || 'Grupo';
-  if (summary?.group_id) {
-    const { data: messageData } = await supabase
-      .from('messages')
-      .select('group_name')
-      .eq('group_id', summary.group_id)
-      .not('group_name', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (messageData?.group_name) {
-      groupName = messageData.group_name;
-    }
-  }
-
   if (error || !summary) {
     return res.status(404).send(`
       <!DOCTYPE html>
@@ -77,6 +60,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       </body>
       </html>
     `);
+  }
+
+  // Buscar nome do grupo
+  let groupName = summary.group_id;
+  const { data: messageData } = await supabase
+    .from('messages')
+    .select('group_name')
+    .eq('group_id', summary.group_id)
+    .not('group_name', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (messageData?.group_name) {
+    groupName = messageData.group_name;
   }
 
   // Converter Markdown para HTML básico
