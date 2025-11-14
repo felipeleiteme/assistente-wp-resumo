@@ -1,11 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Função auxiliar para formatar telefone
+function formatPhone(phone: string): string {
+  // Remove tudo que não é número
+  const numbers = phone.replace(/\D/g, '');
+
+  // Formato brasileiro: +55 11 98110-2068
+  if (numbers.length === 13 && numbers.startsWith('55')) {
+    const ddd = numbers.substring(2, 4);
+    const firstPart = numbers.substring(4, 9);
+    const secondPart = numbers.substring(9);
+    return `+55 ${ddd} ${firstPart}-${secondPart}`;
+  }
+
+  // Se não for padrão brasileiro, retorna formatado básico
+  return `+${numbers}`;
+}
+
 interface WeeklyStats {
   totalMessages: number;
   totalGroups: number;
   messagesByDay: { date: string; count: number }[];
-  messagesByGroup: { groupId: string; count: number }[];
-  topParticipants: { phone: string; count: number }[];
+  messagesByGroup: { groupId: string; groupName: string; count: number }[];
+  topParticipants: { phone: string; name: string; count: number }[];
   peakHours: { hour: number; count: number }[];
   avgMessagesPerDay: number;
   avgMessagesPerGroup: number;
@@ -58,28 +75,60 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // 4. Análise por grupo
-  const messagesByGroupMap = new Map<string, number>();
+  // 4. Análise por grupo (com nomes)
+  const messagesByGroupMap = new Map<string, { count: number; name: string }>();
   messages.forEach(msg => {
     if (msg.group_id) {
-      messagesByGroupMap.set(msg.group_id, (messagesByGroupMap.get(msg.group_id) || 0) + 1);
+      const existing = messagesByGroupMap.get(msg.group_id);
+      if (existing) {
+        existing.count++;
+        // Atualizar nome se disponível
+        if (msg.group_name && msg.group_name !== msg.group_id) {
+          existing.name = msg.group_name;
+        }
+      } else {
+        messagesByGroupMap.set(msg.group_id, {
+          count: 1,
+          name: msg.group_name || msg.group_id
+        });
+      }
     }
   });
 
   const messagesByGroup = Array.from(messagesByGroupMap.entries())
-    .map(([groupId, count]) => ({ groupId, count }))
+    .map(([groupId, data]) => ({
+      groupId,
+      groupName: data.name,
+      count: data.count
+    }))
     .sort((a, b) => b.count - a.count);
 
-  // 5. Top participantes
-  const participantsMap = new Map<string, number>();
+  // 5. Top participantes (com nomes e telefones formatados)
+  const participantsMap = new Map<string, { count: number; name: string }>();
   messages.forEach(msg => {
     if (msg.from_number) {
-      participantsMap.set(msg.from_number, (participantsMap.get(msg.from_number) || 0) + 1);
+      const existing = participantsMap.get(msg.from_number);
+      if (existing) {
+        existing.count++;
+        // Atualizar nome se disponível
+        if (msg.from_name && msg.from_name !== msg.from_number) {
+          existing.name = msg.from_name;
+        }
+      } else {
+        participantsMap.set(msg.from_number, {
+          count: 1,
+          name: msg.from_name || formatPhone(msg.from_number)
+        });
+      }
     }
   });
 
   const topParticipants = Array.from(participantsMap.entries())
-    .map(([phone, count]) => ({ phone, count }))
+    .map(([phone, data]) => ({
+      phone,
+      name: data.name,
+      count: data.count
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
@@ -137,10 +186,10 @@ Analise os dados da semana abaixo e gere um relatório claro e objetivo.
 ${stats.messagesByDay.map(d => `- ${d.date}: ${d.count} mensagens`).join('\n')}
 
 **Grupos Mais Ativos:**
-${stats.messagesByGroup.slice(0, 5).map((g, i) => `${i + 1}. ${g.groupId}: ${g.count} mensagens`).join('\n')}
+${stats.messagesByGroup.slice(0, 5).map((g, i) => `${i + 1}. ${g.groupName}: ${g.count} mensagens`).join('\n')}
 
 **Top 5 Participantes:**
-${stats.topParticipants.slice(0, 5).map((p, i) => `${i + 1}. ${p.phone}: ${p.count} mensagens`).join('\n')}
+${stats.topParticipants.slice(0, 5).map((p, i) => `${i + 1}. ${p.name}: ${p.count} mensagens`).join('\n')}
 
 **Horários de Pico:**
 ${stats.peakHours.map(h => `- ${h.hour}h: ${h.count} mensagens`).join('\n')}
@@ -186,6 +235,8 @@ Gere um relatório em Markdown puro (SEM blocos de código, SEM \`\`\`markdown) 
 - Use ## para todos os títulos de seção
 - NÃO envolva o conteúdo em blocos de código \`\`\`markdown
 - Retorne apenas o markdown puro, pronto para renderização
+- **SEMPRE use os NOMES dos grupos e participantes** fornecidos acima (não use IDs ou telefones brutos)
+- Os nomes já estão formatados corretamente nos dados acima
 - TOM: Seja factual, objetivo e proporcional ao volume de dados`;
 
   const response = await fetch(apiUrl, {
