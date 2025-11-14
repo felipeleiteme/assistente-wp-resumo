@@ -3,10 +3,20 @@ export async function getSummary(transcript: string): Promise<{
   short: string;
 }> {
   const apiKey = process.env.QWEN_API_KEY;
-  const apiUrl = process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+  const apiUrl = process.env.QWEN_API_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions';
 
   if (!apiKey) {
     throw new Error('QWEN_API_KEY não está configurada.');
+  }
+
+  // MODO TESTE: Se a API key for inválida, retornar mock
+  const useMock = process.env.USE_MOCK_AI === 'true';
+  if (useMock) {
+    console.log('⚠️  USANDO RESUMO MOCK (USE_MOCK_AI=true)');
+    return {
+      full: `## Resumo Narrativo\nForam trocadas ${transcript.split('\n').length} mensagens sobre atualizações do projeto.\n\n## Análise de Sentimento\nClima: Positivo e colaborativo\n\n## Pontos de Ação\n- Confirmar dados com o cliente\n- Acompanhar entrega antecipada`,
+      short: 'Conversa produtiva sobre o projeto. Principais pontos: entrega antecipada e próximos passos definidos.'
+    };
   }
 
   // PROMPT V1.6 - Focado em Análise Qualitativa e Quantitativa
@@ -42,16 +52,11 @@ Formato de resposta (JSON OBRIGATÓRIO):
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'qwen-turbo', // ou 'qwen-max' para melhor qualidade
-      input: {
-        messages: [
-          { role: 'system', content: 'Você é um analista de negócios sênior.' },
-          { role: 'user', content: prompt },
-        ],
-      },
-      parameters: {
-        result_format: 'message',
-      },
+      model: 'qwen-turbo',
+      messages: [
+        { role: 'system', content: 'Você é um analista de negócios sênior.' },
+        { role: 'user', content: prompt },
+      ],
     }),
   });
 
@@ -60,7 +65,7 @@ Formato de resposta (JSON OBRIGATÓRIO):
   }
 
   const result = await response.json() as any;
-  const content = result.output?.choices?.[0]?.message?.content;
+  const content = result.choices?.[0]?.message?.content;
 
   if (!content) {
     throw new Error('Resposta inválida da Qwen API.');

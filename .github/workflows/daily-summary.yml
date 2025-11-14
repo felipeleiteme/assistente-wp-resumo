@@ -15,7 +15,7 @@ jobs:
         run: |
           curl -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://assistente-wp-resumo-n1zssr230-felipeleites-projects-24aa8fa9.vercel.app/api/cron/summarize
+            https://assistente-wp-resumo.vercel.app/api/cron/summarize
 
       - name: Log Execution
         run: echo "Daily summary triggered at $(date)"
