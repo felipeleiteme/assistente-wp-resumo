@@ -19,33 +19,26 @@ export async function getSummary(transcript: string): Promise<{
     };
   }
 
-  // PROMPT V2.0 - Anti-Alucinação: Base APENAS no conteúdo fornecido
-  const prompt = `Você é um assistente de análise de conversas de WhatsApp. Sua função é resumir APENAS o que está escrito nas mensagens abaixo, SEM inventar, inferir ou adicionar informações que não existem no texto.
+  // PROMPT - Resumo de conversas WhatsApp
+  const prompt = `Você é um assistente especializado em analisar conversas de WhatsApp e gerar resumos executivos profissionais.
 
-⚠️ REGRAS CRÍTICAS:
-1. Use APENAS informações presentes nas mensagens fornecidas
-2. Se não houver informações sobre algo (ex: KPIs, datas, ações), escreva "Não identificado nas mensagens"
-3. NÃO invente contextos, motivações ou detalhes que não estão explícitos
-4. Cite exatamente o que foi dito, com aspas se necessário
-5. Se as mensagens forem casuais/descontraídas, reflita isso no resumo
-
-Analise as mensagens e gere UM JSON com dois campos:
+Analise as mensagens abaixo e gere um resumo estruturado em JSON com dois campos:
 
 **"full"** - Relatório completo em markdown com:
-- **Resumo Narrativo**: O que foi discutido? (baseado APENAS nas mensagens)
-- **Análise de Sentimento**: Tom geral da conversa (Positivo, Neutro, Urgente, etc)
-- **Principais Tópicos**: Liste os assuntos abordados (literalmente)
-- **Decisões/Ações**: Apenas se explicitamente mencionadas
-- **Observações**: Qualquer detalhe relevante citado
+- **Resumo Narrativo**: Contexto geral e principais assuntos discutidos
+- **Análise de Sentimento**: Tom da conversa (Positivo, Neutro, Urgente, Descontraído, etc)
+- **Principais Tópicos**: Lista dos temas abordados
+- **Decisões e Ações**: Compromissos, próximos passos e responsabilidades
+- **Observações**: Pontos de atenção ou destaques relevantes
 
-**"short"** - Mensagem curta (1-2 frases) casual para WhatsApp
+**"short"** - Mensagem resumida (1-2 frases) em tom casual para enviar no WhatsApp
 
 Mensagens para analisar:
 ${transcript}
 
-RESPONDA APENAS COM O JSON:
+RESPONDA APENAS COM O JSON no formato:
 {
-  "full": "## Resumo Narrativo\n...\n\n## Análise de Sentimento\n...\n\n## Principais Tópicos\n...\n\n## Decisões/Ações\n...\n\n## Observações\n...",
+  "full": "## Resumo Narrativo\n...\n\n## Análise de Sentimento\n...\n\n## Principais Tópicos\n...\n\n## Decisões e Ações\n...\n\n## Observações\n...",
   "short": "mensagem curta aqui"
 }`;
 
@@ -58,10 +51,10 @@ RESPONDA APENAS COM O JSON:
     body: JSON.stringify({
       model: 'qwen-turbo',
       messages: [
-        { role: 'system', content: 'Você é um assistente preciso que resume conversas baseando-se APENAS no conteúdo fornecido, sem inventar informações.' },
+        { role: 'system', content: 'Você é um assistente especializado em análise de conversas e geração de resumos executivos profissionais.' },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.3, // Reduzir criatividade/alucinação
+      temperature: 0.5,
     }),
   });
 
