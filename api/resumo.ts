@@ -221,6 +221,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .content h2:first-child {
           margin-top: 0;
         }
+        /* Estilo especial para seção de Participantes */
+        .content h2:has(+ p), .content h2:has(+ ul) {
+          /* Detecta seção de participantes por estar seguida de lista */
+        }
+        .content h2:nth-of-type(4) {
+          /* Seção de Participantes é tipicamente a 4ª (após Resumo, Sentimento, Tópicos) */
+          background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          border-left: 4px solid #28a745;
+          padding: 12px 15px;
+          background-color: #f0fff4;
+          -webkit-text-fill-color: #28a745;
+          border-radius: 5px;
+        }
         .content h3 {
           color: #495057;
           margin-top: 30px;
@@ -252,6 +268,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           color: #007bff;
           font-size: 18px;
           font-weight: bold;
+        }
+        /* Estilo especial para listas da seção de Participantes */
+        .content h2:nth-of-type(4) ~ ul li {
+          background: linear-gradient(to right, #f0fff4 0%, white 100%);
+          border-left: 3px solid #28a745;
+          padding: 8px 10px;
+          margin-bottom: 18px;
+          border-radius: 4px;
+        }
+        .content h2:nth-of-type(4) ~ ul li:before {
+          content: "👤";
+          color: #28a745;
+          font-size: 16px;
+        }
+        /* Nomes de participantes em destaque */
+        .content h2:nth-of-type(4) ~ ul li > strong {
+          color: #28a745;
+          font-size: 17px;
+          background: rgba(40, 167, 69, 0.1);
+          padding: 3px 8px;
+          border-radius: 4px;
+          display: inline-block;
+          margin-bottom: 5px;
+        }
+        /* Sub-itens (contribuições) */
+        .content h2:nth-of-type(4) ~ ul li ul li {
+          background: white;
+          border-left: 2px solid #20c997;
+          padding: 5px 8px;
+          margin-bottom: 8px;
+          margin-left: 10px;
+          font-size: 15px;
+        }
+        .content h2:nth-of-type(4) ~ ul li ul li:before {
+          content: "→";
+          color: #20c997;
+          font-size: 14px;
         }
         .content strong {
           color: #0056b3;

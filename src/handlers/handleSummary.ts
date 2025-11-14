@@ -58,7 +58,7 @@ export async function handleSummary(): Promise<void> {
 
       // 6. ENVIAR NOTIFICAÇÃO PARA MS TEAMS
       console.log('[DEBUG] Preparando envio para MS Teams...');
-      await sendToTeams(summary.short, summaryUrl, groupName)
+      await sendToTeams(summary.short, summaryUrl, groupName, summary.participants)
         .then(() => console.log('[SUCCESS] Teams: Notificação enviada com sucesso!'))
         .catch(e => console.error('[ERROR] Teams: Falha ao enviar:', e.message));
 
@@ -81,11 +81,18 @@ export async function handleSummary(): Promise<void> {
   }
 }
 
-async function sendToTeams(message: string, url: string, groupName: string): Promise<void> {
+async function sendToTeams(message: string, url: string, groupName: string, participants?: string[]): Promise<void> {
   const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn('TEAMS_WEBHOOK_URL não configurado.');
     return;
+  }
+
+  // Adicionar participantes principais à mensagem se houver
+  let enhancedMessage = message;
+  if (participants && participants.length > 0) {
+    const participantsList = participants.slice(0, 5).join(', ');
+    enhancedMessage = `${message}\n\n👥 **Principais participantes:** ${participantsList}`;
   }
 
   const payload = {
@@ -95,7 +102,7 @@ async function sendToTeams(message: string, url: string, groupName: string): Pro
     sections: [{
       activityTitle: `📱 ${groupName}`,
       activitySubtitle: new Date().toLocaleDateString('pt-BR'),
-      text: message,
+      text: enhancedMessage,
     }],
     potentialAction: [{
       '@type': 'OpenUri',
