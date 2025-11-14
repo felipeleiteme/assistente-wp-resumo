@@ -135,6 +135,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   htmlContent = htmlContent.replace(/<p>(<ul>)/g, '$1');
   htmlContent = htmlContent.replace(/(<\/ul>)<\/p>/g, '$1');
 
+  // 16. Remover <br> dentro de <li>
+  htmlContent = htmlContent.replace(/<li>([^<]*)<br>([^<]*)<\/li>/g, '<li>$1 $2</li>');
+  htmlContent = htmlContent.replace(/<li>(.+?)<br>/g, '<li>$1 ');
+
   // Renderizar página HTML
   return res.status(200).send(`
     <!DOCTYPE html>
