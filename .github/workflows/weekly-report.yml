@@ -1,0 +1,21 @@
+name: Weekly Report Cron
+
+on:
+  schedule:
+    # Executa toda segunda-feira às 09:00 UTC (06:00 BRT)
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  trigger-weekly-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Vercel Function
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://assistente-wp-resumo.vercel.app/api/cron/weekly-report
+
+      - name: Log Execution
+        run: echo "Weekly report triggered at $(date)"

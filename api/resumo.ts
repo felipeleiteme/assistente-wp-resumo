@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            background: #f5f5f5;
+            background: #f8f9fa; /* FUNDO CINZA CLARO */
           }
           .error {
             background: white;
@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #f8f9fa; /* FUNDO CINZA CLARO */
           min-height: 100vh;
           padding: 20px;
         }
@@ -94,12 +94,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           max-width: 900px;
           margin: 0 auto;
           background: white;
-          border-radius: 15px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          border-radius: 10px; /* Borda levemente arredondada */
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Sombra corporativa */
           overflow: hidden;
+          border: 1px solid #dee2e6; /* Borda cinza claro */
         }
         .header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #007bff; /* AZUL PRIMÁRIO SÓLIDO */
           color: white;
           padding: 30px;
           text-align: center;
@@ -118,11 +119,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           color: #333;
         }
         .content h2 {
-          color: #667eea;
+          color: #343a40; /* TEXTO ESCURO (QUASE PRETO) */
           margin-top: 30px;
           margin-bottom: 15px;
           font-size: 22px;
-          border-bottom: 2px solid #667eea;
+          border-bottom: 2px solid #007bff; /* BORDA AZUL PRIMÁRIO */
           padding-bottom: 10px;
         }
         .content h2:first-child {
@@ -140,20 +141,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           padding: 20px 40px;
           text-align: center;
           font-size: 13px;
-          color: #666;
-          border-top: 1px solid #e0e0e0;
+          color: #6c757d; /* CINZA SECUNDÁRIO */
+          border-top: 1px solid #dee2e6;
         }
         .badge {
           display: inline-block;
-          background: rgba(255,255,255,0.2);
+          background: rgba(255,255,255,0.2); /* BRANCO SEMI-TRANSPARENTE */
           padding: 5px 15px;
           border-radius: 20px;
           margin: 5px;
           font-size: 13px;
+          font-weight: 500;
         }
         @media (max-width: 600px) {
+          body {
+            padding: 0;
+            background: white; /* Fundo branco em mobile */
+          }
           .container {
             border-radius: 0;
+            box-shadow: none;
+            border: none;
           }
           .header, .content, .footer {
             padding: 20px;
@@ -176,12 +184,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               day: 'numeric'
             })}</span>
             <span class="badge">💬 ${summary.message_count} mensagens</span>
-            <span class="badge">👥 Grupo: ${summary.group_id}</span>
+            <span class="badge">👥 ${summary.group_id}</span>
           </div>
         </div>
         <div class="content">
-          <p>${htmlContent}</p>
-        </div>
+          ${htmlContent}
+          </div>
         <div class="footer">
           🤖 Resumo gerado automaticamente com IA |
           Gerado em ${new Date(summary.created_at).toLocaleString('pt-BR')}
