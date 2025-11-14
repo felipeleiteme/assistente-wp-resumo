@@ -1,65 +1,112 @@
-# Repórter Clandestino (V1.5)
+# 📱 Assistente WhatsApp - Resumo Automático
 
-Sistema passivo de resumo de mensagens WhatsApp usando Vercel Functions, Supabase e Qwen.
+Sistema de resumo automático de conversas WhatsApp com análise semanal, usando Vercel Functions, Supabase e Qwen AI.
 
-**V1.5:** Suporte a múltiplos grupos do WhatsApp.
+## 🚀 Funcionalidades
 
-## Stack
+- ✅ **Webhook Z-API**: Recebe mensagens do WhatsApp em tempo real
+- ✅ **Resumo Diário**: Geração automática às 19h (via GitHub Actions)
+- ✅ **Relatório Semanal**: Análise completa toda segunda às 6h
+- ✅ **Notificações MS Teams**: Cards interativos com links para resumos
+- ✅ **Páginas Web**: Visualização profissional dos resumos
+- ✅ **Multi-grupo**: Suporta múltiplos grupos WhatsApp
 
-- **Runtime:** Vercel Functions (TypeScript)
-- **Database:** Supabase (PostgreSQL)
-- **WhatsApp:** Z-API
-- **LLM:** Qwen
-- **Notificações:** Resend (Email) + MS Teams (Webhook)
+## 📦 Stack Tecnológica
 
-## Estrutura
+- **Backend**: Vercel Serverless Functions (TypeScript)
+- **Banco de Dados**: Supabase (PostgreSQL)
+- **WhatsApp API**: Z-API
+- **IA**: Qwen (Alibaba Cloud)
+- **Notificações**: MS Teams Webhooks
+- **Automação**: GitHub Actions (cron jobs)
+
+## 📁 Estrutura do Projeto
 
 ```
-/api
-  /webhooks
-    receiver.ts         # Endpoint para receber webhooks do Z-API
-  /cron
-    summarize.ts        # Endpoint do cron job (20:00 UTC)
-/src
-  /handlers
-    handleWebhook.ts    # Lógica de ingestão de mensagens
-    handleSummary.ts    # Lógica de resumo diário
-  /services
-    supabase.service.ts # CRUD com Supabase
-    qwen.service.ts     # Integração com Qwen
-    zapi.service.ts     # Envio de mensagens via Z-API
+├── api/                          # Vercel Serverless Functions
+│   ├── webhooks/
+│   │   ├── receiver.ts          # Recebe mensagens do Z-API
+│   │   └── debug.ts             # Debug de webhooks
+│   ├── cron/
+│   │   ├── summarize.ts         # Cron job - resumo diário
+│   │   └── weekly-report.ts     # Cron job - relatório semanal
+│   ├── debug/
+│   │   └── list-chats.ts        # Listar chats Z-API
+│   ├── resumo.ts                # Página web do resumo diário
+│   └── relatorio-semanal.ts     # Página web do relatório semanal
+│
+├── src/
+│   ├── handlers/
+│   │   ├── handleWebhook.ts     # Processa webhooks do Z-API
+│   │   ├── handleSummary.ts     # Gera resumos diários
+│   │   └── handleWeeklyReport.ts # Gera relatórios semanais
+│   └── services/
+│       ├── supabase.service.ts  # Operações com Supabase
+│       ├── qwen.service.ts      # Integração com Qwen AI
+│       ├── zapi.service.ts      # Envio via Z-API (desativado)
+│       ├── weekly-analysis.service.ts
+│       └── supabase-weekly.service.ts
+│
+├── scripts/                     # Scripts utilitários
+│   ├── check-latest-messages.ts # Verificar mensagens recentes
+│   ├── clear-database.ts        # Limpar banco de dados
+│   ├── test-daily-summary.ts    # Testar resumo diário
+│   ├── test-weekly-report.ts    # Testar relatório semanal
+│   └── test-webhook-local.ts    # Testar webhook localmente
+│
+├── docs/                        # Documentação e SQL
+│   ├── migration-add-group-name.sql
+│   └── supabase-weekly-reports-table.sql
+│
+├── .github/workflows/           # GitHub Actions
+│   └── daily-summary.yml        # Cron job diário (19h BRT)
+│
+├── .env.example                 # Exemplo de variáveis de ambiente
+├── tsconfig.json                # Configuração TypeScript
+├── vercel.json                  # Configuração Vercel
+└── package.json                 # Dependencies
 ```
 
-## Setup
+## ⚙️ Setup
 
-1. Instalar dependências:
+### 1. Instalar dependências
+
 ```bash
 npm install
 ```
 
-2. Configurar variáveis de ambiente:
+### 2. Configurar variáveis de ambiente
+
 ```bash
 cp .env.example .env.local
 # Editar .env.local com suas credenciais
 ```
 
-3. Criar tabelas no Supabase:
+Variáveis necessárias:
+- `SUPABASE_URL` e `SUPABASE_ANON_KEY`
+- `QWEN_API_KEY` e `QWEN_API_URL`
+- `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN`, `ZAPI_CLIENT_TOKEN`
+- `TEAMS_WEBHOOK_URL`
+- `CRON_SECRET` (para GitHub Actions)
 
-**messages:**
+### 3. Criar tabelas no Supabase
+
+Execute os scripts SQL em `docs/`:
+
 ```sql
+-- 1. Tabela de mensagens
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   raw_data JSONB NOT NULL,
   from_number TEXT,
   group_id TEXT,
+  group_name TEXT,
   text_content TEXT,
   received_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-```
 
-**daily_summaries:**
-```sql
+-- 2. Tabela de resumos diários
 CREATE TABLE daily_summaries (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   summary_content TEXT NOT NULL,
@@ -68,35 +115,101 @@ CREATE TABLE daily_summaries (
   group_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 3. Tabela de relatórios semanais
+CREATE TABLE weekly_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_content TEXT NOT NULL,
+  week_start DATE NOT NULL,
+  week_end DATE NOT NULL,
+  total_messages INTEGER NOT NULL,
+  total_groups INTEGER NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 4. Índices
+CREATE INDEX idx_messages_group_id ON messages(group_id);
+CREATE INDEX idx_messages_group_name ON messages(group_name);
+CREATE INDEX idx_messages_received_at ON messages(received_at);
 ```
 
-4. Deploy para Vercel:
+### 4. Deploy para Vercel
+
 ```bash
 vercel --prod
 ```
 
-5. Configurar webhook do Z-API para apontar para:
+### 5. Configurar Z-API Webhook
+
+No painel do Z-API, configure o webhook "Ao receber":
+
 ```
 https://seu-dominio.vercel.app/api/webhooks/receiver
 ```
 
-## Fluxo V1.5
+### 6. Configurar GitHub Actions
 
-1. **Ingestão:** Z-API envia webhook → `/api/webhooks/receiver` → salva em `messages`
-2. **Resumo (Cron 20:00 UTC):**
-   - Aguarda atraso aleatório (1-10 min) para camuflagem
-   - Busca todos os `group_id` distintos que enviaram mensagens hoje
-   - **Para cada grupo:**
-     - Busca mensagens do dia (filtradas por grupo)
-     - Gera resumo com Qwen
-     - Salva em `daily_summaries` (com `group_id`)
-     - Envia resumo completo para Teams + Resend (identificando o grupo)
-     - Envia mensagem curta + link para o grupo específico via WhatsApp
+Adicione o secret `CRON_SECRET` no repositório GitHub:
+- Settings → Secrets → Actions → New repository secret
+- Name: `CRON_SECRET`
+- Value: (mesmo valor da variável `CRON_SECRET` do .env)
 
-## Notas V1.5
+## 🔄 Fluxo de Funcionamento
 
-- **100% passivo:** sem RAG, sem `@bot`, sem interatividade
-- **Multi-grupo:** processa múltiplos grupos em um único cron job
-- **Isolamento:** falha em um grupo não afeta outros grupos
-- **Camuflagem:** atraso aleatório antes de enviar resumo
-- **Segurança:** link público para resumo (sem resumo completo no WhatsApp)
+### Recebimento de Mensagens
+1. Usuário envia mensagem no grupo WhatsApp
+2. Z-API dispara webhook → `/api/webhooks/receiver`
+3. Mensagem é salva no Supabase com `group_name`
+
+### Resumo Diário (19h BRT)
+1. GitHub Action dispara cron job
+2. Endpoint `/api/cron/summarize` é chamado
+3. Para cada grupo ativo:
+   - Busca mensagens do dia
+   - Gera resumo com Qwen AI
+   - Salva no banco de dados
+   - Envia notificação para MS Teams com link
+
+### Relatório Semanal (Segunda 6h BRT)
+1. GitHub Action dispara cron job semanal
+2. Endpoint `/api/cron/weekly-report` é chamado
+3. Coleta estatísticas da semana
+4. Gera análise com Qwen AI
+5. Envia para MS Teams
+
+## 🧪 Scripts de Teste
+
+```bash
+# Verificar mensagens recentes
+npx tsx scripts/check-latest-messages.ts
+
+# Testar resumo diário
+npx tsx scripts/test-daily-summary.ts
+
+# Testar relatório semanal
+npx tsx scripts/test-weekly-report.ts
+
+# Limpar banco de dados
+npx tsx scripts/clear-database.ts
+
+# Testar webhook localmente
+npx tsx scripts/test-webhook-local.ts
+```
+
+## 📝 Notas
+
+- **Sistema 100% passivo**: Não responde mensagens, apenas observa e resume
+- **Privacidade**: Resumos acessíveis apenas via link (não enviados no WhatsApp)
+- **Multi-grupo**: Processa múltiplos grupos independentemente
+- **Limpeza automática**: Mensagens > 7 dias são deletadas automaticamente
+
+## 🔗 Links Úteis
+
+- [Documentação Z-API](https://developer.z-api.io/)
+- [Qwen AI (Alibaba Cloud)](https://www.alibabacloud.com/help/en/model-studio/developer-reference/qwen-api)
+- [Supabase Docs](https://supabase.com/docs)
+- [Vercel Functions](https://vercel.com/docs/functions)
+
+## 📄 Licença
+
+Uso privado.
