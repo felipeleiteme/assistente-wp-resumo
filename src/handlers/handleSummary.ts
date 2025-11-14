@@ -39,7 +39,7 @@ export async function handleSummary(): Promise<void> {
         message_count: messages.length,
       }, groupId);
 
-      const summaryUrl = `${process.env.VERCEL_URL || 'https://seu-dominio.vercel.app'}/resumo/${summaryRecord.id}`;
+      const summaryUrl = `${process.env.VERCEL_URL || 'https://assistente-wp-resumo.vercel.app'}/api/resumo?id=${summaryRecord.id}`;
       console.log(`Resumo salvo. URL: ${summaryUrl}`);
 
       // 6. ENVIAR NOTIFICAÇÕES

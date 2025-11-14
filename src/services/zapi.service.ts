@@ -11,20 +11,33 @@ export async function sendSummaryLink(shortMessage: string, summaryUrl: string, 
 
   const message = `${shortMessage}\n\n🔗 ${summaryUrl}`;
 
+  // Converter formato do grupo se necessário
+  // Formato esperado: 5511888888888-group ou 5511888888888@g.us
+  let phoneNumber = groupId;
+  if (groupId.includes('-group')) {
+    phoneNumber = groupId.replace('-group', '@g.us');
+  } else if (!groupId.includes('@g.us')) {
+    // Se for só o número, adicionar @g.us para grupos
+    phoneNumber = `${groupId}@g.us`;
+  }
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      phone: groupId,
+      phone: phoneNumber,
       message: message,
     }),
   });
 
+  const responseData = await response.text();
+
   if (!response.ok) {
-    throw new Error(`Erro ao enviar mensagem via Z-API: ${response.statusText}`);
+    console.error('Z-API Response:', responseData);
+    throw new Error(`Erro ao enviar mensagem via Z-API: ${response.statusText} - ${responseData}`);
   }
 
-  console.log(`Mensagem enviada ao grupo ${groupId} via Z-API.`);
+  console.log(`Mensagem enviada ao grupo ${groupId} via Z-API. Response: ${responseData}`);
 }
