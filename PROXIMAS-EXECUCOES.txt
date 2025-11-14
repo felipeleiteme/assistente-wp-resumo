@@ -1,0 +1,21 @@
+
+
+📅 PRÓXIMAS EXECUÇÕES AUTOMÁTICAS:
+
+🕐 HOJE (14/11/2025):
+   • 19:00 BRT - Resumo diário automático
+
+📅 AMANHÃ (15/11/2025):
+   • 06:00 BRT - Verificação semanal
+   • 19:00 BRT - Resumo diário
+
+📅 PRÓXIMA SEGUNDA (17/11/2025):
+   • 06:00 BRT - Relatório semanal completo
+
+💡 CADA NOTIFICAÇÃO TERÁ:
+   • Título do grupo WhatsApp
+   • Número de mensagens processadas
+   • Link para relatório completo
+   • Data e horário da geração
+
+
