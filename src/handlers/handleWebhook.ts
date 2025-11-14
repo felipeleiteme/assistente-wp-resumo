@@ -22,7 +22,16 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
   const groupId = messageData.phone || messageData.chatId || messageData.chat?.id || messageData.instanceId || null;
   const fromNumber = messageData.from || messageData.participantPhone || messageData.author || null;
   const textContent = messageData.text?.message || messageData.body || messageData.content || null;
-  const timestamp = messageData.momment || messageData.timestamp || new Date().toISOString();
+
+  // Converter timestamp (Z-API envia em milissegundos)
+  let timestamp: string;
+  if (messageData.momment || messageData.timestamp) {
+    const ts = messageData.momment || messageData.timestamp;
+    // Se for número (milissegundos), converter para ISO string
+    timestamp = typeof ts === 'number' ? new Date(ts).toISOString() : ts;
+  } else {
+    timestamp = new Date().toISOString();
+  }
 
   console.log('[Webhook] Mensagem recebida:', {
     groupId,
