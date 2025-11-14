@@ -1,4 +1,4 @@
-import { getDailyMessages, getDistinctGroupIdsToday, saveSummary, cleanupOldMessages } from '../services/supabase.service';
+import { getDailyMessages, getDistinctGroupIdsToday, getGroupName, saveSummary, cleanupOldMessages } from '../services/supabase.service';
 import { getSummary } from '../services/qwen.service';
 
 export async function handleSummary(): Promise<void> {
@@ -18,9 +18,14 @@ export async function handleSummary(): Promise<void> {
   for (const groupId of groupIds) {
     try {
       console.log(`Processando grupo: ${groupId}`);
+
+      // Buscar nome do grupo
+      const groupName = await getGroupName(groupId);
+      console.log(`Nome do grupo: ${groupName}`);
+
       const messages = await getDailyMessages(groupId);
       if (messages.length === 0) {
-        console.log(`Grupo ${groupId} sem novas mensagens.`);
+        console.log(`Grupo ${groupName} sem novas mensagens.`);
         continue;
       }
 
@@ -43,11 +48,11 @@ export async function handleSummary(): Promise<void> {
 
       // 6. ENVIAR NOTIFICAÇÃO PARA MS TEAMS
       console.log('Enviando notificação para MS Teams...');
-      await sendToTeams(summary.short, summaryUrl, groupId)
+      await sendToTeams(summary.short, summaryUrl, groupName)
         .then(() => console.log('Teams: OK'))
         .catch(e => console.error('Teams: ERRO', e.message));
 
-      console.log(`Grupo ${groupId} processado com sucesso.`);
+      console.log(`Grupo ${groupName} processado com sucesso.`);
 
     } catch (error) {
       console.error(`Falha ao processar grupo ${groupId}:`, error);
@@ -66,7 +71,7 @@ export async function handleSummary(): Promise<void> {
   }
 }
 
-async function sendToTeams(message: string, url: string, groupId: string): Promise<void> {
+async function sendToTeams(message: string, url: string, groupName: string): Promise<void> {
   const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn('TEAMS_WEBHOOK_URL não configurado.');
@@ -79,9 +84,9 @@ async function sendToTeams(message: string, url: string, groupId: string): Promi
     body: JSON.stringify({
       '@type': 'MessageCard',
       '@context': 'https://schema.org/extensions',
-      summary: `Notificação - Grupo ${groupId}`,
+      summary: `📱 ${groupName}`,
       sections: [{
-        activityTitle: `Notificação - Grupo ${groupId}`,
+        activityTitle: `📱 ${groupName}`,
         activitySubtitle: new Date().toLocaleDateString('pt-BR'),
         text: message,
       }],

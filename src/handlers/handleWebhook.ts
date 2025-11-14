@@ -20,6 +20,7 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
 
   // 3. Extrair informações da mensagem (suporta múltiplos formatos do Z-API)
   const groupId = messageData.phone || messageData.chatId || messageData.chat?.id || messageData.instanceId || null;
+  const groupName = messageData.chatName || messageData.chat?.name || null;
   const fromNumber = messageData.from || messageData.participantPhone || messageData.author || null;
   const textContent = messageData.text?.message || messageData.body || messageData.content || null;
 
@@ -45,6 +46,7 @@ export async function handleWebhook(req: VercelRequest): Promise<void> {
     raw_data: messageData,
     from: fromNumber,
     group_id: groupId,
+    group_name: groupName,
     text: textContent,
     timestamp: timestamp,
   });

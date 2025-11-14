@@ -20,6 +20,7 @@ export async function saveMessage(message: {
   raw_data: any;
   from: string | null;
   group_id: string | null;
+  group_name: string | null;
   text: string | null;
   timestamp: string;
 }): Promise<void> {
@@ -31,6 +32,7 @@ export async function saveMessage(message: {
       raw_data: message.raw_data,
       from_number: message.from,
       group_id: message.group_id,
+      group_name: message.group_name,
       text_content: message.text,
       received_at: message.timestamp,
       created_at: new Date().toISOString(),
@@ -94,6 +96,25 @@ export async function getDistinctGroupIdsToday(): Promise<string[]> {
   });
 
   return Array.from(uniqueGroupIds);
+}
+
+export async function getGroupName(groupId: string): Promise<string> {
+  const client = getSupabaseClient();
+
+  const { data, error } = await client
+    .from('messages')
+    .select('group_name')
+    .eq('group_id', groupId)
+    .not('group_name', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data?.group_name) {
+    return groupId; // Fallback para o ID se não encontrar o nome
+  }
+
+  return data.group_name;
 }
 
 export async function saveSummary(summary: {

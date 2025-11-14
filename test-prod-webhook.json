@@ -1,0 +1,15 @@
+{
+  "instanceId": "3E9E3E55DA46F12CE77F6EB14D89919B",
+  "messageId": "TEST123456",
+  "phone": "120363422615703440-group",
+  "fromMe": false,
+  "momment": 1731589200000,
+  "status": "RECEIVED",
+  "chatName": "Grupo Teste Bot",
+  "senderName": "Felipe Teste",
+  "from": "5511916670389",
+  "type": "ReceivedCallback",
+  "text": {
+    "message": "Mensagem de teste via webhook em produção"
+  }
+}
