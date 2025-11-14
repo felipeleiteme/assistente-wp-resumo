@@ -50,7 +50,10 @@ export async function handleSummary(): Promise<void> {
         message_count: messages.length,
       }, groupId);
 
-      const summaryUrl = `${process.env.VERCEL_URL || 'https://assistente-wp-resumo.vercel.app'}/api/resumo?id=${summaryRecord.id}`;
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'https://assistente-wp-resumo.vercel.app';
+      const summaryUrl = `${baseUrl}/api/resumo?id=${summaryRecord.id}`;
       console.log(`[INFO] Resumo salvo. URL: ${summaryUrl}`);
 
       // 6. ENVIAR NOTIFICAÇÃO PARA MS TEAMS
@@ -85,24 +88,29 @@ async function sendToTeams(message: string, url: string, groupName: string): Pro
     return;
   }
 
+  const payload = {
+    '@type': 'MessageCard',
+    '@context': 'https://schema.org/extensions',
+    summary: `📱 ${groupName}`,
+    sections: [{
+      activityTitle: `📱 ${groupName}`,
+      activitySubtitle: new Date().toLocaleDateString('pt-BR'),
+      text: message,
+    }],
+    potentialAction: [{
+      '@type': 'OpenUri',
+      name: 'Ver Resumo Completo',
+      targets: [{ os: 'default', uri: url }],
+    }],
+  };
+
+  console.log('[DEBUG] Teams payload:', JSON.stringify(payload, null, 2));
+  console.log('[DEBUG] Summary URL:', url);
+
   const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      '@type': 'MessageCard',
-      '@context': 'https://schema.org/extensions',
-      summary: `📱 ${groupName}`,
-      sections: [{
-        activityTitle: `📱 ${groupName}`,
-        activitySubtitle: new Date().toLocaleDateString('pt-BR'),
-        text: message,
-      }],
-      potentialAction: [{
-        '@type': 'OpenUri',
-        name: 'Ver Resumo Completo',
-        targets: [{ os: 'default', uri: url }],
-      }],
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
