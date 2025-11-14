@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Configurar variáveis de ambiente
 const supabaseUrl = 'https://lnrnkbazzsqpaozchcoz.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxucm5rYmF6enNxcGFvemNoY296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNTk1NjYsImV4cCI6MjA3ODYzNTU2Nn0.JpRQhKfQmDeE35-_7y1vqi9GMAR1yIR8uLQEXl8JqGM';
+const supabaseKey = 'sua_anon_key_aqui';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
